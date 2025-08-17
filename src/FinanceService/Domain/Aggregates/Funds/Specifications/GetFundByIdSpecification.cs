@@ -1,0 +1,17 @@
+﻿using Specification;
+using Specification.Builders;
+
+namespace Domain.Aggregates.Funds.Specifications
+{
+    public class GetFundByIdSpecification : Specification<Fund>
+    {
+        public GetFundByIdSpecification(long id)
+        {
+            Query
+                .Where(x => x.Id == id)
+                .Include(f => f.User)
+                .Include(x => x.FundBehavior)
+                .AsSplitQuery();
+        }
+    }
+}

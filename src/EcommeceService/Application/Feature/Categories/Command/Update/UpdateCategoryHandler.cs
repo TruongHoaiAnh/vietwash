@@ -1,0 +1,82 @@
+﻿using System.Data.Common;
+using Application.Common.Errors;
+using Application.Common.Interfaces.UnitOfWorks;
+using Contracts.ApiWrapper;
+using Contracts.Common.Messages;
+using Domain.Aggregates.Services;
+using Mediator;
+
+namespace Application.Feature.Categories.Command.Update;
+
+public class UpdateCategoryHandler(IUnitOfWork unitOfWork)
+    : IRequestHandler<UpdateCategoryCommand, Result>
+{
+    public async ValueTask<Result> Handle(
+        UpdateCategoryCommand command,
+        CancellationToken cancellationToken
+    )
+    {
+        Category? getCategory = await unitOfWork
+            .Repository<Category>()
+            .FindByIdAsync(long.Parse(command.CategoryId), cancellationToken);
+
+        if (getCategory == null)
+        {
+            return Result.Failure(
+                new NotFoundError(
+                    "Category not found",
+                    Messager.Create<Category>().Message(MessageType.Found).Negative().BuildMessage()
+                )
+            );
+        }
+
+        command.MapUpdateToEntity(getCategory);
+
+        getCategory.Path = await GenerateCategoryPathAsync(
+            getCategory.Code,
+            command.Category.ParentId,
+            cancellationToken
+        );
+
+        try
+        {
+            DbTransaction transaction = await unitOfWork.BeginTransactionAsync(cancellationToken);
+
+            await unitOfWork.Repository<Category>().UpdateAsync(getCategory);
+
+            await unitOfWork.SaveAsync(cancellationToken);
+
+            await unitOfWork.CommitAsync(cancellationToken);
+
+            return Result.Success();
+        }
+        catch (Exception)
+        {
+            await unitOfWork.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    private async Task<string> GenerateCategoryPathAsync(
+        string id,
+        long? parentId,
+        CancellationToken cancellationToken
+    )
+    {
+        if (parentId == null || parentId <= 0)
+        {
+            return id.ToLower();
+        }
+
+        var parent = await unitOfWork
+            .Repository<Category>()
+            .FindByIdAsync((long)parentId, cancellationToken);
+
+        if (parent == null || string.IsNullOrEmpty(parent.Path))
+        {
+            return id.ToLower(); // hoặc throw nếu Path bắt buộc
+        }
+
+        return $"{parent.Path}.{id.ToLower()}";
+    }
+}

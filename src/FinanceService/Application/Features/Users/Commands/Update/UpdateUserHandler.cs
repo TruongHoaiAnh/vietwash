@@ -1,0 +1,58 @@
+using Application.Common.Errors;
+using Application.Common.Interfaces.Services.Identity;
+using Application.Common.Interfaces.UnitOfWorks;
+using Contracts.ApiWrapper;
+using Contracts.Common.Messages;
+using Domain.Aggregates.Users;
+using Domain.Aggregates.Users.Specifications;
+using Mediator;
+
+namespace Application.Features.Users.Commands.Update;
+
+public class UpdateUserHandler(IUnitOfWork unitOfWork, IMediaUpdateService mediaUpdateService)
+    : IRequestHandler<UpdateUserCommand, Result<UpdateUserResponse>>
+{
+    public async ValueTask<Result<UpdateUserResponse>> Handle(
+        UpdateUserCommand command,
+        CancellationToken cancellationToken
+    )
+    {
+        User? user = await unitOfWork
+            .DynamicReadOnlyRepository<User>()
+            .FindByConditionAsync(
+                new GetUserByIdWithoutIncludeSpecification(command.UserId),
+                cancellationToken
+            );
+
+        if (user == null)
+        {
+            return Result<UpdateUserResponse>.Failure(
+                new NotFoundError(
+                    "Your resource is not found",
+                    Messager.Create<User>().Message(MessageType.Found).Negative().BuildMessage()
+                )
+            );
+        }
+        string? oldAvatar = user.AvtUrl;
+        user.FromUpdateUser(command.User!);
+        try
+        {
+            _ = await unitOfWork.BeginTransactionAsync(cancellationToken);
+
+            await unitOfWork.Repository<User>().UpdateAsync(user);
+            await unitOfWork.SaveAsync(cancellationToken);
+
+            await unitOfWork.Repository<User>().UpdateAsync(user);
+            await unitOfWork.CommitAsync(cancellationToken);
+
+            await mediaUpdateService.DeleteMediaAsync(oldAvatar);
+            return Result<UpdateUserResponse>.Success(new() { Message = "Success" });
+        }
+        catch (Exception)
+        {
+            await mediaUpdateService.DeleteMediaAsync(user.AvtUrl);
+            await unitOfWork.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+}

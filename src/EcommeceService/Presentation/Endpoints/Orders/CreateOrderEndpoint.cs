@@ -1,0 +1,32 @@
+﻿using Application.Common.Auth;
+using Application.Feature.Orders.Command.Create;
+using Application.Feature.Units.Command.Create;
+using Ardalis.ApiEndpoints;
+using Contracts.ApiWrapper;
+using Contracts.RouteResults;
+using Infrastructure.Constants;
+using Mediator;
+using Microsoft.AspNetCore.Mvc;
+using Presentation.Routes;
+using Swashbuckle.AspNetCore.Annotations;
+
+namespace Presentation.Endpoints.Orders
+{
+    public class CreateOrderEndpoint(ISender sender)
+        : EndpointBaseAsync.WithRequest<CreateOrderCommand>.WithActionResult<
+            ApiResponse<CreateOrderResponse>
+        >
+    {
+        [HttpPost(Router.OrderRoute.Orders)]
+        [SwaggerOperation(Tags = [Router.OrderRoute.Tags], Summary = "Create a new order")]
+        [AuthorizeBy]
+        public override async Task<ActionResult<ApiResponse<CreateOrderResponse>>> HandleAsync(
+            [FromBody] CreateOrderCommand request,
+            CancellationToken cancellationToken = default
+        )
+        {
+            var order = await sender.Send(request, cancellationToken);
+            return order.ToCreatedResult();
+        }
+    }
+}

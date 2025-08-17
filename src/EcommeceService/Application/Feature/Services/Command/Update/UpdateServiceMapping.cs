@@ -1,0 +1,23 @@
+﻿using Application.Feature.Common.Mapping.Services;
+using Application.Feature.Common.Mapping.Units;
+using Application.Feature.Common.Projections.Services;
+using Domain.Aggregates.Services;
+
+namespace Application.Feature.Services.Command.Update
+{
+    public static class UpdateServiceMapping
+    {
+        public static void FromUpdateModel(this Service entity, ServiceModel model)
+        {
+            entity.Update(
+                name: model.Name,
+                status: model.Status,
+                categoryId: model.CategoryId,
+                branchId: model.BranchId,
+                description: model.Description,
+                image: model.Image
+            );
+            entity.UnitRelations = model.UnitRelations.ToListUnitRelation() ?? [];
+        }
+    }
+}

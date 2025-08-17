@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Aggregates\Inventories\NewFolder\**" />
+    <EmbeddedResource Remove="Aggregates\Inventories\NewFolder\**" />
+    <None Remove="Aggregates\Inventories\NewFolder\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared.Kernel\Shared.Kernel.csproj" />
+  </ItemGroup>
+</Project>

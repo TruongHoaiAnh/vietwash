@@ -1,0 +1,16 @@
+using Specification;
+using Specification.Builders;
+
+namespace Domain.Aggregates.Accounts.Specifications;
+
+public class GetAccountByIdSpecification : Specification<Account>
+{
+    public GetAccountByIdSpecification(long id)
+    {
+        Query
+            .Where(x => x.Id == id)
+            .Include(x => x.AccountContact)
+            .Include(x => x.BranchAccounts)
+            .AsSplitQuery();
+    }
+}

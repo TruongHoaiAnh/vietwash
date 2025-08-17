@@ -1,0 +1,25 @@
+syntax = "proto3";
+option csharp_namespace = "ProjectService_gRPC";
+
+package queue_log;
+
+enum PubSubType {
+    ORIGIN_PUBSUB = 0; // Updated to match C# code (OriginPubSub)
+    DEAD_LETTER_PUBSUB = 1; // Updated for consistency
+}
+
+message CreatePubSubLogRequest {
+    string request_id = 1;
+    string request_data = 2;
+    string error_detail = 3;
+    PubSubType processed_by = 4;
+    int32 retry_count = 5;
+}
+
+message CreatePubSubLogResponse {
+    bool success = 1;
+}
+
+service PubSubLogService {
+    rpc CreatePubSubLog (CreatePubSubLogRequest) returns (CreatePubSubLogResponse);
+}

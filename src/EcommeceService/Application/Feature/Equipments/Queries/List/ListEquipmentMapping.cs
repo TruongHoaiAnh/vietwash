@@ -1,0 +1,30 @@
+﻿using System.Linq.Expressions;
+using Domain.Aggregates.Equipments;
+
+namespace Application.Feature.Equipments.Queries.List
+{
+    public class ListEquipmentMapping
+    {
+        public static Expression<Func<Equipment, ListEquipmentResponse>> Selector()
+        {
+            return equipment => new ListEquipmentResponse
+            {
+                Id = equipment.Id,
+                PublicId = equipment.PublicId,
+                CreatedAt = equipment.CreatedAt,
+                CreatedBy = equipment.CreatedBy,
+                UpdatedAt = equipment.UpdatedAt,
+                UpdatedBy = equipment.UpdatedBy,
+
+                BranchId = equipment.BranchId,
+                Name = equipment.Name,
+                Description = equipment.Description,
+                Code = equipment.Code,
+                Price = equipment.Price,
+                Status = equipment.Status,
+                Image = equipment.Image,
+                Using = equipment.Using,
+            };
+        }
+    }
+}

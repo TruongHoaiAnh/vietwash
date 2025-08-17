@@ -1,0 +1,29 @@
+using Application.Features.Accounts.Commands.Token;
+using Ardalis.ApiEndpoints;
+using Contracts.ApiWrapper;
+using Contracts.RouteResults;
+using Mediator;
+using Microsoft.AspNetCore.Mvc;
+using Presentation.Routes;
+using Swashbuckle.AspNetCore.Annotations;
+
+namespace Presentation.Endpoints.Account;
+
+public class RefreshAccountTokenEndpoint(ISender sender)
+    : EndpointBaseAsync.WithRequest<RefreshTokenCommand>.WithActionResult<
+        ApiResponse<RefreshTokenResponse>
+    >
+{
+    private readonly ISender sender = sender;
+
+    [HttpPost(Router.AccountRoute.RefreshToken)]
+    [SwaggerOperation(Tags = [Router.AccountRoute.Tags], Summary = "refresh token")]
+    public override async Task<ActionResult<ApiResponse<RefreshTokenResponse>>> HandleAsync(
+        RefreshTokenCommand request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await sender.Send(request, cancellationToken);
+        return result.ToActionResult();
+    }
+}
